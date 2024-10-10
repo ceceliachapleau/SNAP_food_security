@@ -39,7 +39,7 @@ dataFS$raceethno <- dataFS %>%
 
 #New income variable
 dataFS$income <- dataFS %>% 
-  mutate(income = case_when(FAMINC == 100|FAMINC == 200|FAMINC == 300 ~"under10",
+  mutate(income = case_when(FAMINC == 100|FAMINC == 200|FAMINC == 300~"under10",
                       FAMINC == 430|FAMINC == 470|FAMINC == 500|FAMINC == 600~"10_25",
                       FAMINC == 710|FAMINC == 720|FAMINC == 730|FAMINC == 740~"25_50",
                       FAMINC == 820|FAMINC == 830|FAMINC == 841|FAMINC == 842|FAMINC == 843~"above50"
