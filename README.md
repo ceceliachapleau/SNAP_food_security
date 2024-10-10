@@ -8,6 +8,7 @@ library(tidyverse)
 library(Hmisc)
 library(dplyr)
 library(janitor)
+library(dplyr)
 
 #Create a new dataset with those in the food supplement survey
 dataFS <- filter(data,FSSUPINT==1)
@@ -30,26 +31,26 @@ dataFS$FAMINC[dataFS$FAMINC == 999]<- NA
 
 #Create new race and ethnicity variable with categories of White (non-hispanic), Black (non-hispanic), Hispanic, and Other
 dataFS$raceethno <- dataFS %>% 
-  mutate(raceethno = case_when((HISPAN>=100 & HISPAN<=612)~"Hispanic",
-                      (RACE==100 & HISPAN==000)~"White",
-                      (RACE==200 & HISPAN==000)~"Black",
-                      (RACE>200 & RACE<900 & HISPAN==000)~"Other"
+  mutate(raceethno = case_when(HISPAN>=100 & HISPAN<=612~"Hispanic",
+                      RACE==100 & HISPAN==000~"White",
+                      RACE==200 & HISPAN==000~"Black",
+                      RACE>200 & RACE<900 & HISPAN==000~"Other"
                       ))
 
 #New income variable
 dataFS$income <- dataFS %>% 
-  mutate(income = case_when((FAMINC == 100|FAMINC == 200|FAMINC == 300)~"under10",
-                      (FAMINC == 430|FAMINC == 470|FAMINC == 500|FAMINC == 600)~"10_25",
-                      (FAMINC == 710|FAMINC == 720|FAMINC == 730|FAMINC == 740)~"25_50",
-                      (FAMINC == 820|FAMINC == 830|FAMINC == 841|FAMINC == 842|FAMINC == 843)~"above50"
+  mutate(income = case_when(FAMINC == 100|FAMINC == 200|FAMINC == 300 ~"under10",
+                      FAMINC == 430|FAMINC == 470|FAMINC == 500|FAMINC == 600~"10_25",
+                      FAMINC == 710|FAMINC == 720|FAMINC == 730|FAMINC == 740~"25_50",
+                      FAMINC == 820|FAMINC == 830|FAMINC == 841|FAMINC == 842|FAMINC == 843~"above50"
                       ))
 
 #New employment status variable
 dataFS$employment <- dataFS %>% 
-  mutate(income = case_when((EMPSTAT == 1|EMPSTAT == 10|EMPSTAT == 12)~"employed",
-                      (EMPSTAT == 20|EMPSTAT == 21|EMPSTAT == 22)~"unemployed",
-                      (FAMINC == 710|FAMINC == 720|FAMINC == 730|FAMINC == 740)~"25_50",
-                      (EMPSTAT == 32|EMPSTAT == 34|EMPSTAT == 36)~"NILF"))
+  mutate(income = case_when(EMPSTAT == 1|EMPSTAT == 10|EMPSTAT == 12~"employed",
+                      EMPSTAT == 20|EMPSTAT == 21|EMPSTAT == 22~"unemployed",
+                      FAMINC == 710|FAMINC == 720|FAMINC == 730|FAMINC == 740~"25_50",
+                      EMPSTAT == 32|EMPSTAT == 34|EMPSTAT == 36~"NILF"))
 
 
 #Create two new datasets separating Michigan and Indiana
@@ -396,14 +397,11 @@ p <- ggplot(fs_map, aes(long, lat)) +
           plot.background = element_rect(fill = 'transparent', color = NA),
           panel.grid.major = element_blank()) 
 
-# Animate the plot
 animated_plot <- p +
   transition_states(YEAR, transition_length = 300,
                               state_length = 300) +
   labs(title = 'Year: {closest_state}')+
 
-  
-# Save the animation
 anim_save("animated_states.gif", animation = animated_plot, end_pause = 20, renderer = gifski_renderer())
 
 
