@@ -1,0 +1,75 @@
+#packages for adding animation to exisiting graphs
+library(gapminder)
+library(ggplot2)
+library(gganimate)
+library(sf)
+library(gifski)
+library(maps)
+
+table8 <- 
+  dataFS %>% 
+  drop_na(FSSTATUS) %>% 
+  drop_na(FSFDSTMP) %>% 
+  group_by(YEAR, FSSTATUS = as_factor(FSSTATUS), STATEFIP = as_factor(STATEFIP)) %>% 
+  summarise(weight_value = 100*weighted.mean(FSFDSTMP == 2, FSSUPPWT, na.rm = TRUE)) 
+
+p <- ggplot(table8, aes(YEAR, weight_value, fill = FSSTATUS))+
+  geom_point(aes(shape = FSSTATUS, colour = FSSTATUS), size = 3)+
+  labs(y="% of SNAP Recipients")+
+  labs(x="Year")+
+  ggtitle("Figure 4:% of SNAP Recipients by Food Security Status")+
+  theme_classic()+
+  My_Theme +
+  theme(legend.title=element_blank())+
+  theme(legend.position="none") +
+  facet_wrap(vars(STATEFIP), dir = "v")+
+  geom_line(aes(linetype = FSSTATUS, colour = FSSTATUS), linewidth = 1)+
+  labs(caption = "Source: Author calculations using Michigan and Indiana CPS Food Security Supplement data from 2010 to 2021") +
+  theme(plot.caption = element_text(hjust=0, size = 10))
+
+
+animated_plot <- p +
+  geom_point() +
+  transition_reveal(YEAR)
+
+anim_save("animated_graph1.gif", animation = animated_plot, renderer = gifski_renderer(loop = FALSE))
+
+#Creating animated maps of Michigan and Indiana using food secure status from 2010 to 2021
+library(usmap)
+table1 <- 
+dataFS %>%
+  drop_na(FSSTATUS) %>%
+  group_by(YEAR = as.numeric(YEAR), STATEFIP = as_factor(STATEFIP)) %>%
+  summarize(FOOD_STATUS = 100*weighted.mean(FSSTATUS==1, FSSUPPWT, na.rm = TRUE)) 
+
+#choosing michigan and indiana from map_data
+state1 <- c("indiana", "michigan")
+map <- map_data("state", region=state1)
+
+#making the column lowercase to merge statefip and region
+table1$STATEFIP <- tolower(table1$STATEFIP)
+
+#renaming region column header to statefip so the columns can merge
+states <- map %>% rename_at('region', ~'STATEFIP')
+
+#merging columns
+fs_map <- merge(states, table1, by = "STATEFIP")
+
+#putting the order in the correct order so the states appear correctly
+fs_map <- fs_map[order(fs_map$order), ]
+
+#putting it into a ggplot
+p <- ggplot(fs_map, aes(long, lat)) +
+  geom_polygon(aes(group = group, fill=FOOD_STATUS)) +
+  coord_map() +
+  theme(panel.background = element_rect(fill = 'transparent'),
+          plot.background = element_rect(fill = 'transparent', color = NA),
+          panel.grid.major = element_blank()) 
+
+animated_plot <- p +
+  transition_states(YEAR, transition_length = 300,
+                              state_length = 300) +
+  labs(title = 'Year: {closest_state}')+
+
+anim_save("animated_states.gif", animation = animated_plot, end_pause = 20, renderer = gifski_renderer())
+
